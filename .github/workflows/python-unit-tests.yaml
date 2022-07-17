@@ -1,0 +1,41 @@
+name: Python unit testing workflow
+
+on:
+    workflow_call:
+        inputs:
+            python-version:
+                description: "The python versions to run the tests against"
+                default: "3.9"
+                required: false
+                type: string
+            os:
+                description: "The operating system to run the tests on"
+                default: ubuntu-latest
+                required: false
+                type: string
+
+
+jobs:
+    test:
+        name: Unit Tests
+        runs-on: ${{ inputs.os }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup Python${{ inputs.python-version }}
+              uses: actions/setup-python@v2
+              with:
+                python-version: ${{ inputs.python-version }}
+            - name: Install dependencies
+              run: |
+                pip install -U pip
+                pip install poetry
+                poetry install --no-root
+            - name: Run Tests with Pytest
+              run: poetry run python -m pytest -vvv --doctest-modules --junitxml=junit/test-results-${{ inputs.os }}-python${{ inputs.python-version }}.xml
+            - name: Create Test Artifacts
+              uses: actions/upload-artifact@v2
+              with:
+                name: pytest-result-python${{ inputs.python-version }}
+                path: junit/test-results-${{ inputs.os }}-python${{ inputs.python-version }}.xml
+              if:
+                ${{ always() }}

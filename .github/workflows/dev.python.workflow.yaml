@@ -1,0 +1,19 @@
+name: Default Development Workflow
+
+on:
+    push:
+        branches:
+            - dev
+            - '**/feat**'
+            - '**/fix**'
+        paths:
+            - '**.py'
+        paths-ignore:
+            - '**.md'
+
+jobs:
+    test:
+        uses: ./.github/workflows/python-unit-tests.yaml
+        with:
+            python-version: "3.9"
+            os: ubuntu-latest
