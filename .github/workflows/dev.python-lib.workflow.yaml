@@ -12,7 +12,7 @@ on:
 
 jobs:
     test:
-        uses: ./.github/workflows/python-unit-tests.yaml
+        uses: ./.github/workflows/python/unit-tests.yaml
         with:
             python-version: "3.9"
             os: ubuntu-latest

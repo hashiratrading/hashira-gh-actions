@@ -1,0 +1,39 @@
+name: Build Python Package
+
+on:
+    workflow_call:
+        outputs:
+            artifact-name:
+                description: "The name of the built package file"
+                value: ${{ jobs.build.outputs.package }}
+
+jobs:
+    build:
+        name: Build The Package Artifact
+        runs-on: ubuntu-latest
+        outputs:
+            package: ${{ steps.set-outputs.outputs.artifact-name }}
+            prefix: ${{ steps.set-outputs.outputs.artifact-prefix }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: Setup Python3.9
+              uses: actions/setup-python@v2
+              with:
+                python-version: "3.9"
+            - name: Install Dependencies
+              run: |
+                pip install -U pip
+                pip install poetry
+                poetry install --no-root
+            - name: Build the package
+              run: |
+                poetry build -f wheel
+                echo "artifact_name=$(ls dist/)" >> $GITHUB_ENV
+            - id: set-outputs
+              run: |
+                echo "::set-output name=artifact-name::${{ env.artifact_name }}"
+            - name: Upload Package Artifact
+              uses: actions/upload-artifact@v2
+              with:
+                name: ${{ env.artifact_name }}
+                path: dist/${{ env.artifact_name }}
