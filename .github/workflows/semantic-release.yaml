@@ -1,0 +1,51 @@
+# Workflow for automatically creating a semantic release of the repository.
+# Requires the existance of a `.releaserc` file in the project root.
+# Expects the plugins to be configured:
+#   - semantic-release/commit-analyzer
+#   - semantic-release/release-notes-generator
+#       - semantic-release/changelog
+#   - semantic-release/exec
+#   - semantic-release/git
+#   - semantic-release/github
+name: Create and publish application as a Docker image
+
+on:
+    workflow_call:
+        secrets:
+            REGISTRY_PASSWORD:
+                description: "Login token"
+                required: true
+        outputs:
+            VERSION:
+                description: "The new version created from semantic release"
+                value: ${{ jobs.semantic-release.outputs.version }}
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    semantic-release:
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.set-outputs.outputs.VERSION }}
+        permissions:
+            contents: write
+            issues: read
+        steps:
+            - uses: actions/checkout@v2
+            - name: Semantic Release
+              id: semantic  # Need an ID for output variables
+              uses: cycjimmy/semantic-release-action@v3
+              with:
+                extra_plugins: |
+                    @semantic-release/changelog
+                    @semantic-release/exec
+                    @semantic-release/git
+                    @semantic-release/github
+              env:
+                GITHUB_TOKEN: ${{ secrets.REGISTRY_PASSWORD }}
+            - id: set-outputs
+              if: steps.semantic.outputs.new_release_published == 'true'
+              run: |
+                echo "::set-output name=VERSION::${{ steps.semantic.outputs.new_release_version }}"
