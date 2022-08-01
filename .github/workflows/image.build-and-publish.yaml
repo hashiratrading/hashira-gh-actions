@@ -1,0 +1,38 @@
+name: Create and publish application as a Docker image
+
+on:
+    workflow_call:
+        inputs:
+            VERSION:
+                description: "The version of the image to publish"
+                required: true
+                type: string
+        secrets:
+            REGISTRY_PASSWORD:
+                description: "Login token"
+                required: true
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    build-and-push-image:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - uses: actions/checkout@v2
+            - name: Login to the container registry
+              uses: docker/login-action@v1
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.REGISTRY_PASSWORD }}
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v2
+              with:
+                context: .
+                push: true
+                tags: ${{env.REGISTRY}}/${{ github.repository }}:${{ inputs.VERSION }}
