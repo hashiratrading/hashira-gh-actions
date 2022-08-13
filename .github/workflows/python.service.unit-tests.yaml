@@ -18,6 +18,10 @@ on:
                 default: "1.2.0b3"
                 required: false
                 type: string
+        secrets:
+            SSH_KEY:
+                description: "SSH key required to access private repository"
+                required: true
 
 
 jobs:
@@ -34,7 +38,7 @@ jobs:
               if: ${{ contains( inputs.poetry-version, 'b') }}
               run: |
                 eval `ssh-agent -s`
-                ssh-add - <<< '${{ secrets.HASHIRA_SSH_KEY }}'
+                ssh-add - <<< '${{ secrets.SSH_KEY }}'
                 curl -sSL https://install.python-poetry.org | python - --version ${{ inputs.poetry-version }}
                 ln -s ~/.local/bin/poetry /usr/local/bin/poetry
                 poetry --version
@@ -43,7 +47,7 @@ jobs:
               if: ${{ !contains( inputs.poetry-version, 'b') }}
               run: |
                 eval `ssh-agent -s`
-                ssh-add - <<< '${{ secrets.HASHIRA_SSH_KEY }}'
+                ssh-add - <<< '${{ secrets.SSH_KEY }}'
                 pip install -U pip
                 pip install poetry
                 poetry install --no-root
